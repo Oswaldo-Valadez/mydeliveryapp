@@ -13,6 +13,8 @@ import ProviderCompleteRequests from '../screens/ProviderCompleteRequests';
 import * as Icon from '@expo/vector-icons';
 import { colors } from '../common/theme';
 
+import I18n from '../common/lang/config';
+
 const RootProviderTab = createMaterialTopTabNavigator();
 export const ProviderTab = () => (
     <RootProviderTab.Navigator
@@ -31,7 +33,7 @@ export const ProviderTab = () => (
             name="ProviderActiveRequestsScreen"
             component={ProviderActiveRequests}
             options={{
-                tabBarLabel: 'Active Requests',
+                tabBarLabel: I18n.t('active_requests'),
                 tabBarIcon: () => (
                     <Icon.MaterialIcons name="playlist-play" color={colors.WHITE} size={26} />
                 )
@@ -41,7 +43,7 @@ export const ProviderTab = () => (
             name="ProviderCompleteRequestsScreen"
             component={ProviderCompleteRequests}
             options={{
-                tabBarLabel: 'Complete Requests',
+                tabBarLabel: I18n.t('completed_requests'),
                 tabBarIcon: () => (
                     <Icon.MaterialIcons name="playlist-add-check" color={colors.WHITE} size={26} />
                 )
@@ -68,7 +70,7 @@ export const RequesterTab = () => (
             name="RequesterActiveRequestsScreen"
             component={RequesterActiveRequests}
             options={{
-                tabBarLabel: 'Active Requests',
+                tabBarLabel: I18n.t('active_requests'),
                 tabBarIcon: () => (
                     <Icon.MaterialIcons name="playlist-play" color={colors.WHITE} size={26} />
                 )
@@ -78,7 +80,7 @@ export const RequesterTab = () => (
             name="RequesterMakeRequestScreen"
             component={RequesterMakeRequest}
             options={{
-                tabBarLabel: 'Make Request',
+                tabBarLabel: I18n.t('make_request'),
                 tabBarIcon: () => (
                     <Icon.Octicons name="diff-added" color={colors.WHITE} size={26} />
                 )
@@ -88,7 +90,7 @@ export const RequesterTab = () => (
             name="RequesterCompleteRequestsScreen"
             component={RequesterCompleteRequests}
             options={{
-                tabBarLabel: 'Complete Requests',
+                tabBarLabel: I18n.t('completed_requests'),
                 tabBarIcon: () => (
                     <Icon.MaterialIcons name="playlist-add-check" color={colors.WHITE} size={26} />
                 )

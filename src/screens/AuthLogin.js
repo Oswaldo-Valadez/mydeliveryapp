@@ -21,123 +21,115 @@ import { Feather, FontAwesome } from '@expo/vector-icons';
 
 import { colors } from '../common/theme';
 
-import { AuthContext } from '../common/context';
+import * as firebase from 'firebase';
 
 export default function AuthLogin(props) {
-  const { signIn } = React.useContext(AuthContext);
-
   const usertype = props.route.params.usertype;
+
+  const [isSigning, setIsSigning] = useState(false);
 
   const [authInfo, setAuthInfo] = useState({
     email: '',
     password: '',
-    check_textInputChange: false,
-    secureTextEntry: true,
-    isValidEmail: true,
-    isValidPassword: true,
+    secureTextEntryPassword: true,
+    checkEmail: false,
+    checkPassword: false,
   });
+
+  const handleAuth = () => {
+    setIsSigning(true);
+    setTimeout(() => {
+      firebase.auth().signInWithEmailAndPassword(authInfo.email, authInfo.password).catch(() => {
+        setIsSigning(false);
+      })
+    }, 1000);
+  }
 
   return (
     <View style={styles.container}>
       <MBackground source={require('../../assets/images/background-art.png')}>
+
         <Animatable.View animation="fadeInDownBig" style={styles.changeLang}>
           <MMinimalButton caption={I18n.t('change_service')} onPress={() => props.navigation.navigate('SelectServiceScreen')} />
         </Animatable.View>
+
         <View style={styles.header}>
-          <Text style={styles.text_header}>Welcome { usertype }!</Text>
+          <Text style={styles.text_header}>{I18n.t('login_title')}{I18n.t(usertype)}!</Text>
         </View>
-        <Animatable.View
-          animation="fadeInUpBig"
-          style={[styles.footer, {
-            backgroundColor: "white"
-          }]}
-        >
-          <Text style={[styles.text_footer, {
-            color: "black"
-          }]}>E-mail</Text>
+
+        <Animatable.View animation="fadeInUpBig" style={[styles.footer, { backgroundColor: "white" }]}>
+
+          <Text style={[styles.text_footer, { marginTop: 35 }]}>{I18n.t('email')}</Text>
           <View style={styles.action}>
-            <FontAwesome
-              name="envelope-o"
-              color={"black"}
-              size={20}
-            />
+            <FontAwesome name="envelope-o" color="#05375a" size={20} />
             <TextInput
-              placeholder="Your Username"
-              placeholderTextColor="#666666"
+              placeholder={I18n.t('your_email')}
               keyboardType="email-address"
-              style={[styles.textInput, {
-                color: "black"
-              }]}
+              style={styles.textInput}
               autoCapitalize="none"
+              onChangeText={(val) => {
+                const reg = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
+                reg.test(val) ?
+                  setAuthInfo({ ...authInfo, email: val, checkEmail: true })
+                  :
+                  setAuthInfo({ ...authInfo, email: '', checkEmail: false })
+              }}
             />
-            {authInfo.check_textInputChange ?
-              <Animatable.View
-                animation="bounceIn"
-              >
-                <Feather
-                  name="check-circle"
-                  color="green"
-                  size={20}
-                />
-              </Animatable.View>
-              : null}
+            {
+              authInfo.checkEmail ?
+                <Animatable.View animation="bounceIn">
+                  <Feather name="check-circle" color="green" size={20} />
+                </Animatable.View>
+                :
+                null
+            }
           </View>
-          {authInfo.isValidEmail ? null :
-            <Animatable.View animation="fadeInLeft" duration={500}>
-              <Text style={styles.errorMsg}>E-mail is incorrect.</Text>
-            </Animatable.View>
-          }
 
-
-          <Text style={[styles.text_footer, {
-            color: "black",
-            marginTop: 35
-          }]}>{I18n.t('password')}</Text>
+          <Text style={[styles.text_footer, { marginTop: 35 }]}>{I18n.t('password')}</Text>
           <View style={styles.action}>
-            <Feather
-              name="lock"
-              color="black"
-              size={20}
-            />
+            <Feather name="lock" color="#05375a" size={20} />
             <TextInput
               placeholder={I18n.t('your_password')}
-              placeholderTextColor="#666666"
-              secureTextEntry={authInfo.secureTextEntry ? true : false}
-              style={[styles.textInput, {
-                color: "black"
-              }]}
+              secureTextEntry={authInfo.secureTextEntryPassword}
+              style={styles.textInput}
               autoCapitalize="none"
+              onChangeText={((val) => {
+                val.length >= 6 ?
+                  setAuthInfo({ ...authInfo, password: val, checkPassword: true })
+                  :
+                  setAuthInfo({ ...authInfo, password: '', checkPassword: false })
+              })}
             />
-            <TouchableOpacity
-            >
-              {authInfo.secureTextEntry ?
-                <Feather
-                  name="eye-off"
-                  color="grey"
-                  size={20}
-                />
-                :
-                <Feather
-                  name="eye"
-                  color="grey"
-                  size={20}
-                />
+            <TouchableOpacity onPress={() => setAuthInfo({ ...authInfo, secureTextEntryPassword: !authInfo.secureTextEntryPassword })}>
+              {
+                authInfo.secureTextEntryPassword ?
+                  <Feather name="eye-off" size={20} color="grey" />
+                  :
+                  <Feather name="eye" color="grey" size={20} />
               }
             </TouchableOpacity>
+            {
+              authInfo.checkPassword ?
+                <Animatable.View animation="bounceIn">
+                  <Feather style={styles.validationIcon} name="check-circle" color="green" size={20} />
+                </Animatable.View>
+                :
+                null
+            }
           </View>
-          {authInfo.isValidPassword ? null :
-            <Animatable.View animation="fadeInLeft" duration={500}>
-              <Text style={styles.errorMsg}>Password must be minimum 6 characters long.</Text>
-            </Animatable.View>
-          }
-
 
           <TouchableOpacity>
-            <Text style={{ color: '#009387', marginTop: 15 }}>Forgot password?</Text>
+            <Text style={{ color: '#ee1280', marginTop: 15 }}>Forgot password?</Text>
           </TouchableOpacity>
+
           <View style={styles.button}>
-            <MButton buttonStyle="outlined" caption={I18n.t('sign_in')} onPress={() => signIn('invented', props.route.params.usertype)} />
-            <MButton opaque={true} buttonStyle="solid" caption={I18n.t('sign_up')} onPress={() => props.navigation.navigate('RegisterScreen')} />
+            <MButton buttonStyle="outlined" caption={I18n.t('sign_in')} onPress={() => {
+              authInfo.checkPassword && authInfo.checkEmail ?
+                handleAuth()
+                :
+                null
+            }} />
+            <MButton opaque={true} buttonStyle="solid" caption={I18n.t('sign_up')} onPress={() => props.navigation.navigate('RegisterScreen', { usertype: usertype })} />
           </View>
         </Animatable.View>
       </MBackground>
@@ -231,5 +223,8 @@ const styles = StyleSheet.create({
   changeLang: {
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  validationIcon: {
+    marginLeft: 10,
   },
 });

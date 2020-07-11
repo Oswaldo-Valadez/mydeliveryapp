@@ -1,24 +1,17 @@
 import React from 'react';
 import {
     View,
-    Text,
     ScrollView
 } from 'react-native';
-import RequestListItem from '../components/RequestsList';
+import RequestsList from '../components/RequestsList';
 
-export default function RequesterActiveRequests() {
-
-    let payments = [];
-
-    for (let i = 0; i < 10; i++) {
-        payments.push(
-            <RequestListItem id={i} />
-        )
-    }
+export default function RequesterActiveRequests(props) {
 
     return (
-        <ScrollView>
-            {payments}
-        </ScrollView>
+        <View style={{ flex: 1 }}>
+            <ScrollView>
+                <RequestsList/>
+            </ScrollView>
+        </View>
     );
 }

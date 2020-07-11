@@ -5,7 +5,6 @@ import { StyleSheet, View } from 'react-native';
 import { Avatar } from 'react-native-paper';
 import { colors } from '../common/theme';
 import * as Animatable from 'react-native-animatable';
-import * as Localization from 'expo-localization';
 import MButton from '../components/MaterialButton';
 import MBackground from '../components/MaterialBackground';
 import { AuthContext } from '../common/context';
@@ -15,10 +14,10 @@ const { height, width } = Dimensions.get('window');
 export default function SelectLanguage(props) {
   const { useIsLang } = useContext(AuthContext);
 
-  const [lang, setLang] = useState(Localization.locale);
+  const [lang, setLang] = useState('');
 
   useEffect(() => {
-    if (lang != Localization.locale) {
+    if (lang != '') {
       _setLangAsync();
     }
   });
@@ -40,8 +39,9 @@ export default function SelectLanguage(props) {
           <Avatar.Icon backgroundColor={colors.PRIMARY_COLOR} size={94} icon="translate" />
         </Animatable.View>
         <Animatable.View animation="fadeInUpBig" style={styles.footer}>
-          <MButton opaque={true} buttonStyle="outlined" caption={I18n.t('en')} onPress={() => setLang('en')} />
-          <MButton opaque={true} buttonStyle="outlined" caption={I18n.t('es')} onPress={() => setLang('es')} />
+          <MButton opaque={true} buttonStyle="outlined" caption="Español" onPress={() => setLang('es')} />
+          <MButton opaque={true} buttonStyle="outlined" caption="English" onPress={() => setLang('en')} />
+          <MButton opaque={true} buttonStyle="outlined" caption="اَلْعَرَبِيَّةُ" onPress={() => setLang('ar')} />
         </Animatable.View>
       </MBackground>
     </View>

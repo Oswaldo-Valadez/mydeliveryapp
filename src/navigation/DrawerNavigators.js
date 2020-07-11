@@ -12,15 +12,16 @@ import {
 } from './StackNavigators';
 
 import MButton from '../components/MaterialButton';
-import { AuthContext } from '../common/context';
 
+import * as firebase from 'firebase';
 
 function DrawerContent(props) {
-    const { signOut } = React.useContext(AuthContext);
 
     return (
         <View style={styles.drawerContainer}>
-            <MButton caption="Sign Out" opaque={true} buttonStyle="solid" onPress={() => signOut()} />
+            <MButton caption="Sign Out" opaque={true} buttonStyle="solid" onPress={() => {
+                firebase.auth().signOut();
+            }} />
         </View>
     );
 }

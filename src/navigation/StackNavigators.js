@@ -3,7 +3,6 @@ import React, { useEffect, useContext } from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
 
 import RequesterUserDetails from '../screens/RequesterUserDetails';
-
 import ProviderUserDetails from '../screens/ProviderUserDetails';
 
 import AuthLogin from '../screens/AuthLogin';
@@ -13,7 +12,8 @@ import SelectService from '../screens/SelectService';
 import { ProviderTab, RequesterTab } from './TabNavigators';
 
 import { colors } from '../common/theme';
-import { AuthContext } from '../common/context';
+import Icon, { MaterialCommunityIcons } from '@expo/vector-icons';
+import I18n from '../common/lang/config';
 
 //Stack for Authentication end
 const RootAuthStack = createStackNavigator();
@@ -29,12 +29,7 @@ export function AuthStack() {
 
 //Stack for Privider end
 const RootProviderStack = createStackNavigator();
-export function ProviderStack() {
-    const { setUserToken } = useContext(AuthContext);
-
-    useEffect(() => {
-        setUserToken();
-    }, []);
+export function ProviderStack({ navigation }) {
 
     return (
         <RootProviderStack.Navigator
@@ -48,7 +43,15 @@ export function ProviderStack() {
                 }
             }}
         >
-            <RootProviderStack.Screen options={{ title: 'Requests' }} name="RootProviderTab" component={ProviderTab} />
+            <RootProviderStack.Screen
+                options={{
+                    title: I18n.t('requests'),
+                    headerRight: () => (
+                        <MaterialCommunityIcons.Button name="menu" backgroundColor="transparent" size={28} onPress={() => navigation.toggleDrawer()} ></MaterialCommunityIcons.Button>
+                    )
+                }}
+                name="RootProviderTab" component={ProviderTab}
+            />
             <RootProviderStack.Screen options={{ title: 'User Details' }} name="ProviderUserDetailsScreen" component={ProviderUserDetails} />
         </RootProviderStack.Navigator>
     );
@@ -56,12 +59,7 @@ export function ProviderStack() {
 
 //Stack for Requester end
 const RootRequesterStack = createStackNavigator();
-export function RequesterStack() {
-    const { setUserToken } = useContext(AuthContext);
-
-    useEffect(() => {
-        setUserToken();
-    }, []);
+export function RequesterStack({ navigation }) {
 
     return (
         <RootRequesterStack.Navigator
@@ -75,7 +73,15 @@ export function RequesterStack() {
                 }
             }}
         >
-            <RootRequesterStack.Screen options={{ title: 'Requests' }} name="RootRequesterTabScreen" component={RequesterTab} />
+            <RootRequesterStack.Screen
+                options={{
+                    title: I18n.t('requests'),
+                    headerRight: () => (
+                        <MaterialCommunityIcons.Button name="menu" backgroundColor="transparent" size={28} onPress={() => navigation.toggleDrawer()} ></MaterialCommunityIcons.Button>
+                    )
+                }}
+                name="RootRequesterTabScreen" component={RequesterTab}
+            />
             <RootRequesterStack.Screen options={{ title: 'User Details' }} name="RequesterUserDetailsScreen" component={RequesterUserDetails} />
         </RootRequesterStack.Navigator>
     );

@@ -1,21 +1,17 @@
 import React from 'react';
 import {
     View,
-    Text
+    ScrollView
 } from 'react-native';
+import RequestsList from '../components/RequestsList';
 
-export default class ProviderCompleteRequests extends React.Component {
-    constructor(props) {
-        super(props);
-        this.state = {}
-    }
-    render() {
-        return (
+export default function ProviderCompleteRequests(props) {
 
-            <View>
-                <Text>Complete Requests</Text>
-            </View>
-
-        );
-    }
+    return (
+        <View style={{ flex: 1 }}>
+            <ScrollView>
+                <RequestsList />
+            </ScrollView>
+        </View>
+    );
 }
