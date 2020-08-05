@@ -3,6 +3,9 @@ import React, { useEffect, useContext } from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
 
 import RequesterUserDetails from '../screens/RequesterUserDetails';
+import RequesterSearchPlace from '../screens/SearchPlace';
+import RequesterSelectRoutes from '../screens/SelectRoutes';
+
 import ProviderUserDetails from '../screens/ProviderUserDetails';
 
 import AuthLogin from '../screens/AuthLogin';
@@ -70,7 +73,7 @@ export function RequesterStack({ navigation }) {
                 headerTintColor: colors.WHITE,
                 headerTitleStyle: {
                     fontWeight: "bold"
-                }
+                },
             }}
         >
             <RootRequesterStack.Screen
@@ -83,6 +86,8 @@ export function RequesterStack({ navigation }) {
                 name="RootRequesterTabScreen" component={RequesterTab}
             />
             <RootRequesterStack.Screen options={{ title: 'User Details' }} name="RequesterUserDetailsScreen" component={RequesterUserDetails} />
+            <RootRequesterStack.Screen options={{ title: 'User Details' }} name="RequesterSearchPlaceScreen" component={RequesterSearchPlace} />
+            <RootRequesterStack.Screen options={{ headerShown: false }} name="RequesterSelectRoutesScreen" component={RequesterSelectRoutes} />
         </RootRequesterStack.Navigator>
     );
 }

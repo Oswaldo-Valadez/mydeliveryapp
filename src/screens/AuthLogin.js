@@ -1,7 +1,5 @@
 import React, { useState } from 'react';
-import { AsyncStorage } from 'react-native';
 import I18n from "../common/lang/config";
-import * as Localization from 'expo-localization';
 
 import MButton from '../components/MaterialButton';
 import MMinimalButton from '../components/MaterialMinimalButton';
@@ -14,6 +12,7 @@ import {
   TextInput,
   Platform,
   StyleSheet,
+  ActivityIndicator,
 } from 'react-native';
 
 import * as Animatable from 'react-native-animatable';
@@ -34,15 +33,17 @@ export default function AuthLogin(props) {
     secureTextEntryPassword: true,
     checkEmail: false,
     checkPassword: false,
+    checkAlert: false,
   });
 
   const handleAuth = () => {
     setIsSigning(true);
     setTimeout(() => {
-      firebase.auth().signInWithEmailAndPassword(authInfo.email, authInfo.password).catch(() => {
+      firebase.auth().signInWithEmailAndPassword(authInfo.email, authInfo.password).catch((error) => {
+        console.log(error);
         setIsSigning(false);
       })
-    }, 1000);
+    }, 1500);
   }
 
   return (
@@ -58,79 +59,95 @@ export default function AuthLogin(props) {
         </View>
 
         <Animatable.View animation="fadeInUpBig" style={[styles.footer, { backgroundColor: "white" }]}>
+          {
+            !isSigning ?
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.text_footer, { marginTop: 35 }]}>{I18n.t('email')}</Text>
+                <View style={styles.action}>
+                  <FontAwesome name="envelope-o" color="#05375a" size={20} />
+                  <TextInput
+                    placeholder={I18n.t('your_email')}
+                    keyboardType="email-address"
+                    style={styles.textInput}
+                    autoCapitalize="none"
+                    onChangeText={(val) => {
+                      const reg = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
+                      reg.test(val) ?
+                        setAuthInfo({ ...authInfo, email: val, checkEmail: true })
+                        :
+                        setAuthInfo({ ...authInfo, email: '', checkEmail: false })
+                    }}
+                  />
+                  {
+                    authInfo.checkEmail ?
+                      <Animatable.View animation="bounceIn">
+                        <Feather name="check-circle" color="green" size={20} />
+                      </Animatable.View>
+                      :
+                      null
+                  }
+                </View>
+                {
+                  !authInfo.checkEmail && authInfo.checkAlert ?
+                    <Text style={styles.textValidation}>{I18n.t('check_confirm_password')}*</Text> : null
+                }
 
-          <Text style={[styles.text_footer, { marginTop: 35 }]}>{I18n.t('email')}</Text>
-          <View style={styles.action}>
-            <FontAwesome name="envelope-o" color="#05375a" size={20} />
-            <TextInput
-              placeholder={I18n.t('your_email')}
-              keyboardType="email-address"
-              style={styles.textInput}
-              autoCapitalize="none"
-              onChangeText={(val) => {
-                const reg = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
-                reg.test(val) ?
-                  setAuthInfo({ ...authInfo, email: val, checkEmail: true })
-                  :
-                  setAuthInfo({ ...authInfo, email: '', checkEmail: false })
-              }}
-            />
-            {
-              authInfo.checkEmail ?
-                <Animatable.View animation="bounceIn">
-                  <Feather name="check-circle" color="green" size={20} />
-                </Animatable.View>
-                :
-                null
-            }
-          </View>
+                <Text style={[styles.text_footer, { marginTop: 35 }]}>{I18n.t('password')}</Text>
+                <View style={styles.action}>
+                  <Feather name="lock" color="#05375a" size={20} />
+                  <TextInput
+                    placeholder={I18n.t('your_password')}
+                    secureTextEntry={authInfo.secureTextEntryPassword}
+                    style={styles.textInput}
+                    autoCapitalize="none"
+                    onChangeText={((val) => {
+                      val.length >= 6 ?
+                        setAuthInfo({ ...authInfo, password: val, checkPassword: true })
+                        :
+                        setAuthInfo({ ...authInfo, password: '', checkPassword: false })
+                    })}
+                  />
+                  <TouchableOpacity onPress={() => setAuthInfo({ ...authInfo, secureTextEntryPassword: !authInfo.secureTextEntryPassword })}>
+                    {
+                      authInfo.secureTextEntryPassword ?
+                        <Feather name="eye-off" size={20} color="grey" />
+                        :
+                        <Feather name="eye" color="grey" size={20} />
+                    }
+                  </TouchableOpacity>
+                  {
+                    authInfo.checkPassword ?
+                      <Animatable.View animation="bounceIn">
+                        <Feather style={styles.validationIcon} name="check-circle" color="green" size={20} />
+                      </Animatable.View>
+                      :
+                      null
+                  }
+                </View>
+                {
+                  !authInfo.checkPassword && authInfo.checkAlert ?
+                    <Text style={styles.textValidation}>{I18n.t('check_confirm_password')}*</Text> : null
+                }
 
-          <Text style={[styles.text_footer, { marginTop: 35 }]}>{I18n.t('password')}</Text>
-          <View style={styles.action}>
-            <Feather name="lock" color="#05375a" size={20} />
-            <TextInput
-              placeholder={I18n.t('your_password')}
-              secureTextEntry={authInfo.secureTextEntryPassword}
-              style={styles.textInput}
-              autoCapitalize="none"
-              onChangeText={((val) => {
-                val.length >= 6 ?
-                  setAuthInfo({ ...authInfo, password: val, checkPassword: true })
-                  :
-                  setAuthInfo({ ...authInfo, password: '', checkPassword: false })
-              })}
-            />
-            <TouchableOpacity onPress={() => setAuthInfo({ ...authInfo, secureTextEntryPassword: !authInfo.secureTextEntryPassword })}>
-              {
-                authInfo.secureTextEntryPassword ?
-                  <Feather name="eye-off" size={20} color="grey" />
-                  :
-                  <Feather name="eye" color="grey" size={20} />
-              }
-            </TouchableOpacity>
-            {
-              authInfo.checkPassword ?
-                <Animatable.View animation="bounceIn">
-                  <Feather style={styles.validationIcon} name="check-circle" color="green" size={20} />
-                </Animatable.View>
-                :
-                null
-            }
-          </View>
+                <TouchableOpacity>
+                  <Text style={{ color: '#ee1280', marginTop: 15 }}>{I18n.t('forgot_password')}</Text>
+                </TouchableOpacity>
 
-          <TouchableOpacity>
-            <Text style={{ color: '#ee1280', marginTop: 15 }}>Forgot password?</Text>
-          </TouchableOpacity>
-
-          <View style={styles.button}>
-            <MButton buttonStyle="outlined" caption={I18n.t('sign_in')} onPress={() => {
-              authInfo.checkPassword && authInfo.checkEmail ?
-                handleAuth()
-                :
-                null
-            }} />
-            <MButton opaque={true} buttonStyle="solid" caption={I18n.t('sign_up')} onPress={() => props.navigation.navigate('RegisterScreen', { usertype: usertype })} />
-          </View>
+                <View style={styles.button}>
+                  <MButton buttonStyle="outlined" caption={I18n.t('sign_in')} onPress={() => {
+                    authInfo.checkPassword && authInfo.checkEmail ?
+                      handleAuth()
+                      :
+                      setAuthInfo({ ...authInfo, checkAlert: true });
+                  }} />
+                  <MButton opaque={true} buttonStyle="solid" caption={I18n.t('sign_up')} onPress={() => props.navigation.navigate('RegisterScreen', { usertype: usertype })} />
+                </View>
+              </View>
+              :
+              <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                <ActivityIndicator size='large' color={colors.PRIMARY_COLOR} />
+              </View>
+          }
         </Animatable.View>
       </MBackground>
     </View>
@@ -227,4 +244,7 @@ const styles = StyleSheet.create({
   validationIcon: {
     marginLeft: 10,
   },
+  textValidation: {
+    color: 'red'
+  }
 });

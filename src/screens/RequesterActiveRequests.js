@@ -3,14 +3,14 @@ import {
     View,
     ScrollView
 } from 'react-native';
-import RequestsList from '../components/RequestsList';
+import RequestsList from '../components/List';
 
 export default function RequesterActiveRequests(props) {
 
     return (
-        <View style={{ flex: 1 }}>
+        <View style={{ flex: 1, backgroundColor: "#f4f4fb" }}>
             <ScrollView>
-                <RequestsList/>
+                <RequestsList status="active" />
             </ScrollView>
         </View>
     );

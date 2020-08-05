@@ -57,6 +57,7 @@ export const RequesterTab = () => (
     <RootRequesterTab.Navigator
         initialRouteName="RequesterMakeRequestScreen"
         tabBarPosition="bottom"
+        swipeEnabled={false}
         tabBarOptions={{
             labelStyle: { fontSize: 8, color: colors.WHITE },
             style: { backgroundColor: colors.PRIMARY_COLOR },

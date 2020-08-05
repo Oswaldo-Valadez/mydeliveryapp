@@ -3,14 +3,14 @@ import {
     View,
     ScrollView
 } from 'react-native';
-import RequestsList from '../components/RequestsList';
+import RequestsList from '../components/List';
 
 export default function RequesterCompleteRequests(props) {
 
     return (
         <View style={{ flex: 1 }}>
             <ScrollView>
-                <RequestsList />
+                <RequestsList status="completed" />
             </ScrollView>
         </View>
     );

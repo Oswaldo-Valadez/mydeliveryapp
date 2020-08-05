@@ -9,6 +9,7 @@ import { colors } from './src/common/theme';
 import AppContainer from './src/navigation/AppContainer';
 import { AuthContext } from './src/common/context';
 import I18n from './src/common/lang/config';
+import GetPushToken from './src/common/GetPushToken';
 
 //Start firebase conf
 import * as firebase from 'firebase';
@@ -64,6 +65,7 @@ export default function App() {
         const userData = firebase.database().ref('users/' + user.uid);
         userData.on('value', data => {
           const usertype = data.val().usertype;
+          GetPushToken();
           setIsLogin(true);
           setUsertype(usertype);
         });

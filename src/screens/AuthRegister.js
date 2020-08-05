@@ -30,11 +30,14 @@ import CountryPicker from 'react-native-country-picker-modal';
 
 import * as firebase from 'firebase';
 
+import GenerateVerificationCode from '../components/GenerateVerificationCode';
+
 export default function AuthRegister(props) {
   const usertype = props.route.params.usertype;
 
   const [step, setStep] = useState('fill-form');
-  const [codeVerification, setCodeVerification] = useState('4520');
+
+  const [finalVerificationCode, setFinalVerificationCode] = useState(GenerateVerificationCode());
 
   const [registerInfo, setRegisterInfo] = useState({
     username: '',
@@ -44,6 +47,7 @@ export default function AuthRegister(props) {
     country: 'US',
     callingCode: 1,
     usertype: usertype,
+    verificationCode: '',
     checkUsername: false,
     checkEmail: false,
     checkPhone: false,
@@ -59,25 +63,45 @@ export default function AuthRegister(props) {
     setTimeout(() => {
       if (step == 'email-verification') {
         setStep(step);
+        sendMail();
       }
-      else
+      else {
+        setStep('');
         handleRegister();
+      }
     }, 1000);
   }
 
+  const sendMail = () => {
+    fetch('https://us-central1-my-delivery-app-go.cloudfunctions.net/sendMail', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        email: registerInfo.email,
+        verification_code: finalVerificationCode,
+        username: registerInfo.username
+      })
+    });
+  }
+
   const handleRegister = () => {
+    console.log("Handle register start");
     const regData = {
       username: registerInfo.username,
       email: registerInfo.email,
       phone: registerInfo.phone,
-      password: registerInfo.password,
       country: registerInfo.country,
       usertype: registerInfo.usertype,
     }
     setTimeout(() => {
       firebase.auth().createUserWithEmailAndPassword(registerInfo.email, registerInfo.password).then(() => {
-        firebase.database().ref('users/' + firebase.auth().currentUser.uid + '/').set(regData);
-      }).catch(() => {
+        firebase.database().ref('users/' + firebase.auth().currentUser.uid + '/').set(regData).catch((error) => {
+          console.log(error);
+        });
+      }).catch((error) => {
+        console.log(error);
       });
     }, 2000);
   }
@@ -93,6 +117,7 @@ export default function AuthRegister(props) {
           {
             step == 'email-verification' ?
               <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                <Text>{I18n.t('enter_your_code_below')}</Text>
                 <SmoothPinCodeInput
                   cellStyle={{
                     borderBottomWidth: 2,
@@ -101,9 +126,10 @@ export default function AuthRegister(props) {
                   cellStyleFocused={{
                     borderColor: 'black',
                   }}
-                  value={codeVerification}
-                  onTextChange={code => setCodeVerification(code)}
+                  value={registerInfo.verificationCode}
+                  onTextChange={code => setRegisterInfo({ ...registerInfo, verificationCode: code })}
                 />
+                <MButton buttonStyle="outlined" caption={I18n.t('verify')} onPress={() => { registerInfo.verificationCode == finalVerificationCode ? handleRegister() : console.log("False") }} />
               </View>
               : step == 'fill-form' ?
                 <ScrollView>
@@ -182,7 +208,7 @@ export default function AuthRegister(props) {
                       onChangeText={(val) => {
                         const reg = /^[0-9]{8,15}$/;
                         reg.test(val) ?
-                          setRegisterInfo({ ...registerInfo, phone: '+' + registerInfo.callingCode + ' ' + val.toString(), checkPhone: true })
+                          setRegisterInfo({ ...registerInfo, phone: '+' + registerInfo.callingCode + val.toString(), checkPhone: true })
                           :
                           setRegisterInfo({ ...registerInfo, phone: '', checkPhone: false })
                       }}

@@ -24,7 +24,6 @@ export default function AppContainer(props) {
                         !props.isLang ?
                             <MainRootStack.Screen name="SelectLanguageScreen" component={SelectLanguage} />
                             :
-
                             !props.isLogin ?
                                 <MainRootStack.Screen name="RootAuthStack" component={AuthStack} />
                                 :

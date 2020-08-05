@@ -37,6 +37,9 @@
           "location",
           "fetch"
         ]
+      },
+      "config": {
+        "googleMapsApiKey": "AIzaSyCvE_I1WPCPsBl0jR19BMoR-jLTlkP4Q-o"
       }
     },
     "android": {
@@ -49,7 +52,12 @@
         "ACCESS_FINE_LOCATION",
         "ACCESS_COARSE_LOCATION",
         "CAMERA_ROLL"
-      ]
+      ],
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyCvE_I1WPCPsBl0jR19BMoR-jLTlkP4Q-o"
+        }
+      }
     }
   }
 }
