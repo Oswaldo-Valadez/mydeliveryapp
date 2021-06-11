@@ -1,5 +1,11 @@
 import React from "react";
-import { StyleSheet, TouchableOpacity, Text } from "react-native";
+import {
+    StyleSheet,
+    TouchableOpacity,
+    Text,
+    StatusBar,
+    Platform
+} from "react-native";
 
 import { colors } from '../common/theme';
 
@@ -23,12 +29,15 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         borderBottomLeftRadius: 25,
         borderBottomRightRadius: 25,
-        backgroundColor: colors.WHITE,
+        borderTopLeftRadius: Platform.OS == 'ios' ? 25 : 0,
+        borderTopRightRadius: Platform.OS == 'ios' ? 25 : 0,
+        backgroundColor: colors.WHITE.default,
+        marginTop: Platform.OS == 'ios' ? StatusBar.currentHeight + 4 : 0,
     },
     caption: {
         fontSize: 14,
-        fontWeight: 'bold',
         color: colors.PRIMARY_COLOR,
+        fontFamily: 'OpenSans-Bold',
     },
 });
 

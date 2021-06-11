@@ -1,11 +1,10 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import {
     View,
     ScrollView,
     Text,
-    StyleSheet,
-    RefreshControl,
+    StyleSheet
 } from 'react-native';
 import List from '../components/List';
 import { colors } from '../common/theme';
@@ -14,7 +13,7 @@ import I18n from '../common/lang/config';
 
 import * as firebase from 'firebase';
 
-export default function RequesterActiveRequests(props) {
+export default function RequesterInactiveRequests(props) {
 
     const [requests, setRequests] = useState([]);
 
@@ -25,7 +24,7 @@ export default function RequesterActiveRequests(props) {
             const ref_request = data.val();
             for (let key in ref_request) {
                 ref_request[key].key = key;
-                if (ref_request[key].requester_uid == firebase.auth().currentUser.uid && ref_request[key].status == 'active')
+                if (ref_request[key].requester_uid == firebase.auth().currentUser.uid && ref_request[key].status === 'inactive')
                     allRequests.push(ref_request[key]);
             }
             setRequests(allRequests);

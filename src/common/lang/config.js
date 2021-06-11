@@ -1,4 +1,5 @@
 import I18n from "i18n-js";
+import Moment from 'moment/min/moment-with-locales';
 
 import en from "./en";
 import ar from "./ar";

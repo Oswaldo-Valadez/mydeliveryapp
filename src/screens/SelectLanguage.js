@@ -39,7 +39,6 @@ export default function SelectLanguage(props) {
           <Avatar.Icon backgroundColor={colors.PRIMARY_COLOR} size={94} icon="translate" />
         </Animatable.View>
         <Animatable.View animation="fadeInUpBig" style={styles.footer}>
-          <MButton opaque={true} buttonStyle="outlined" caption="Español" onPress={() => setLang('es')} />
           <MButton opaque={true} buttonStyle="outlined" caption="English" onPress={() => setLang('en')} />
           <MButton opaque={true} buttonStyle="outlined" caption="اَلْعَرَبِيَّةُ" onPress={() => setLang('ar')} />
         </Animatable.View>

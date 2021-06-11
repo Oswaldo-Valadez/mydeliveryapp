@@ -2,35 +2,100 @@ import React, { useEffect, useState } from 'react';
 import {
     StyleSheet,
     View,
-    Image,
+    ScrollView,
     Dimensions,
     Text,
+    TouchableOpacity,
+    Platform,
+    TextInput,
+    ActivityIndicator,
 } from 'react-native';
-import { TouchableOpacity, BaseButton } from 'react-native-gesture-handler';
-import MapComponent from '../components/MapComponent';
+
+import ServiceTypes from '../components/ServiceTypes';
+
+import DateTimePicker from '@react-native-community/datetimepicker';
+
 import { colors } from '../common/theme';
 
-import * as Location from 'expo-location';
-import * as Permissions from 'expo-permissions';
-var { height, width } = Dimensions.get('window');
-import { GeoFire } from 'geofire';
-import * as firebase from 'firebase'
-import { AnimatedRegion } from 'react-native-maps';
-import { google_map_key } from '../common/key';
+import * as firebase from 'firebase';
 import I18n from '../common/lang/config';
-import Geocoder from 'react-native-geocoding';
 
 import MButton from '../components/MaterialButton';
 
 import * as Icon from '@expo/vector-icons';
+import * as Animatable from 'react-native-animatable';
 
-export default function RequesterMakeRequest(props) {
+import { Surface } from 'react-native-paper';
+
+import Moment from 'moment/min/moment-with-locales';
+
+import RequestPushMsg from '../common/RequestPushMsg';
+
+import MyModal from '../components/MyModal';
+
+function getProviders(services, providersList) {
+    const waiting_providers_list = [];
+    const pushToken_list = [];
+
+    providersList.map((provider) => {
+        if (
+            (provider.services.car && services.car) ||
+            (provider.services.bus && services.bus) ||
+            (provider.services.pickup && services.pickup) ||
+            (provider.services.truck && services.truck)
+        ) {
+            waiting_providers_list.push(provider.key);
+            pushToken_list.push(provider.pushToken);
+        }
+    })
+
+    return waiting_providers_list.length != 0 ? { waiting_providers_list: waiting_providers_list, pushToken_list: pushToken_list } : { waiting_providers_list: null, pushToken_list: null };
+}
+
+export default function RequesterMakeRequest({ navigation, route }) {
+
 
     useEffect(() => {
-        Geocoder.init(google_map_key);
-        _getLocationAsync();
-        console.log("useEffect");
+        Moment.locale(I18n.locale);
+    });
+
+    useEffect(() => {
+        if (route.params?.deliverPoint && route.params?.pickupPoint) {
+            const { deliverPoint, pickupPoint } = route.params;
+            setRequestData({
+                ...requestData,
+                deliver_text: deliverPoint.text,
+                deliver_latitude: deliverPoint.latitude,
+                deliver_longitude: deliverPoint.longitude,
+                pickup_text: pickupPoint.text,
+                pickup_latitude: pickupPoint.latitude,
+                pickup_longitude: pickupPoint.longitude
+            });
+        }
+    }, [route.params?.deliverPoint, route.params?.pickupPoint]);
+
+    useEffect(() => {
+        const listAllProviders = [];
+        const refProviders = firebase.database().ref('users');
+
+        refProviders.on('value', data => {
+            if (data.val()) {
+                const allProviders = data.val();
+                for (let key in allProviders) {
+                    if (allProviders[key].usertype == 'provider' && allProviders[key].approved) {
+                        allProviders[key].key = key;
+                        listAllProviders.push(allProviders[key]);
+                    }
+                }
+            }
+        });
+
+        setProvidersList(listAllProviders);
     }, []);
+
+    const [providersList, setProvidersList] = useState([]);
+
+    const [checkOnMakeRequest, setCheckOnMakeRequest] = useState(false);
 
     const [requestData, setRequestData] = useState({
         deliver_text: "",
@@ -39,397 +104,299 @@ export default function RequesterMakeRequest(props) {
         pickup_text: "",
         pickup_latitude: 9.061460,
         pickup_longitude: 7.500640,
-        types: [],
-        date_time: '',
+        date: new Date(),
+        time: new Date(),
         notes: ''
     });
 
-    const [pickupRegion, setPickupRegion] = useState({
-        latitude: 9.061460,
-        longitude: 7.500640,
-        latitudeDelta: 0.9922,
-        longitudeDelta: 0.9421,
+    const [services, setServices] = useState({
+        car: false,
+        bus: false,
+        pickup: false,
+        truck: false
     });
 
-    const [deliverRegion, setDeliverRegion] = useState({
-        latitude: 9.061460,
-        longitude: 7.500640,
-        latitudeDelta: 0.9922,
-        longitudeDelta: 0.9421,
+    const [showDatetimePicker, setShowDatetimePicker] = useState({
+        date: false,
+        time: false
     });
 
-    const [selectedPoint, setSelectedPoint] = useState('pickup');
+    const [myModalVisibility, setMyModalVisibility] = useState({
+        noProvidersModal: false,
+        requestSendedModal: false,
+        preparingRequestModal: false,
+    });
 
-    _getLocationAsync = async () => {
-        let { status } = await Permissions.askAsync(Permissions.LOCATION);
+    const handleMakeRequest = () => {
 
-        if (status !== 'granted') {
-            return null;
-        }
+        setMyModalVisibility({ ...myModalVisibility, preparingRequestModal: true });
 
-        let location = await Location.getCurrentPositionAsync({})
-        if (location) {
-            var pos = {
-                latitude: location.coords.latitude,
-                longitude: location.coords.longitude,
-            };
+        setTimeout(() => {
+            const { waiting_providers_list, pushToken_list } = getProviders(services, providersList);
 
-            if (pos) {
-                let latlng = pos.latitude + ',' + pos.longitude;
-                return fetch('https://maps.googleapis.com/maps/api/geocode/json?latlng=' + latlng + '&key=' + google_map_key)
-                    .then((response) => response.json())
-                    .then((responseJson) => {
-                        //console.error(responseJson);
-                        if (!props.route.params) {
-                            Geocoder.from({
-                                latitude: pos.latitude,
-                                longitude: pos.longitude
-                            }).then(json => {
-                                const addressComponent = json.results[0].formatted_address;
-                                setPickupRegion({
-                                    ...pickupRegion,
-                                    latitude: pos.latitude,
-                                    longitude: pos.longitude,
-                                    latitudeDelta: pos.latitudeDelta,
-                                    longitudeDelta: pos.longitudeDelta,
-                                });
-                                setDeliverRegion({
-                                    ...deliverRegion,
-                                    latitude: pos.latitude,
-                                    longitude: pos.longitude,
-                                    latitudeDelta: pos.latitudeDelta,
-                                    longitudeDelta: pos.longitudeDelta,
-                                });
-                                setRequestData({
-                                    ...requestData,
-                                    deliver_text: addressComponent,
-                                    deliver_latitude: pos.latitude,
-                                    deliver_longitude: pos.longitude,
-                                    pickup_text: addressComponent,
-                                    pickup_latitude: pos.latitude,
-                                    pickup_longitude: pos.longitude,
-                                });
-                            }).catch(error => console.warn(error));
-                        } else {
-                            if (props.route.params.point == "pickup") {
-                                setPickupRegion({
-                                    ...pickupRegion,
-                                    latitude: props.route.params.data.latitude,
-                                    longitude: props.route.params.data.longitude,
-                                    latitudeDelta: pos.latitudeDelta,
-                                    longitudeDelta: pos.longitudeDelta,
-                                });
-                                setRequestData({
-                                    ...requestData,
-                                    deliver_text: addressComponent,
-                                    deliver_latitude: pos.latitude,
-                                    deliver_longitude: pos.longitude,
-                                    pickup_text: addressComponent,
-                                    pickup_latitude: pos.latitude,
-                                    pickup_longitude: pos.longitude,
-                                });
-                            } else {
+            if (waiting_providers_list) {
+                const data = {
+                    services: services,
+                    delivery_point: {
+                        latitude: requestData.deliver_latitude,
+                        longitude: requestData.deliver_longitude,
+                        text: requestData.deliver_text,
+                    },
+                    pickup_point: {
+                        latitude: requestData.pickup_latitude,
+                        longitude: requestData.pickup_longitude,
+                        text: requestData.pickup_text,
+                    },
+                    date: requestData.date.toString(),
+                    time: requestData.time.toString(),
+                    notes: requestData.notes,
+                    creation_date: new Date().toString(),
+                    status: 'active',
+                    requester_uid: firebase.auth().currentUser.uid,
+                    waiting_providers_list: waiting_providers_list,
+                }
 
-                            }
-                        }
-                    }).catch((error) => {
-                        //console.error(error);
-                    });
+                const msg = I18n.t('you_have_a_new_request');
+
+                RequestPushMsg(pushToken_list ? pushToken_list : null, msg);
+
+                firebase.database().ref('requests/').push(data);
+
+                setMyModalVisibility({ ...myModalVisibility, requestSendedModal: true });
+            } else {
+                setMyModalVisibility({ ...myModalVisibility, noProvidersModal: true });
             }
-        }
-    }
-
-    //Go to confirm booking page
-    onPressBook = () => {
+        }, 3000);
 
     }
 
-    const tapAddress = (selection) => {
-        if (selection === selectedPoint) {
-            props.navigation.navigate('RequesterSearchPlaceScreen', { from: selection, data: requestData });
-        } else {
-            setSelectedPoint(selection);
-        }
+    const onChangeDate = (event, selectedDate) => {
+        const date = selectedDate || requestData.date;
+        setShowDatetimePicker({ ...showDatetimePicker, date: !showDatetimePicker.date });
+        setRequestData({ ...requestData, date: date });
     };
 
-    const onRegionChangeComplete = (region_map) => {
-        Geocoder.from({
-            latitude: region_map.latitude,
-            longitude: region_map.longitude
-        }).then(json => {
-            var addressComponent = json.results[0].formatted_address;
-            if (selectedPoint == 'pickup') {
-                setRequestData({
-                    ...requestData,
-                    pickup_text: addressComponent,
-                    pickup_latitude: region_map.latitude,
-                    pickup_longitude: region_map.longitude,
-                });
-                setPickupRegion({
-                    ...pickupRegion,
-                    latitude: region_map.latitude,
-                    longitude: region_map.longitude,
-                    latitudeDelta: region_map.latitudeDelta,
-                    longitudeDelta: region_map.longitudeDelta,
-                });
-            } else {
-                setRequestData({
-                    ...requestData,
-                    deliver_text: addressComponent,
-                    deliver_latitude: region_map.latitude,
-                    deliver_longitude: region_map.longitude,
-                });
-                setDeliverRegion({
-                    ...deliverRegion,
-                    latitude: region_map.latitude,
-                    longitude: region_map.longitude,
-                    latitudeDelta: region_map.latitudeDelta,
-                    longitudeDelta: region_map.longitudeDelta,
-                });
-            }
-        }).catch(error => console.warn(error));
+    const onChangeTime = (event, selectedTime) => {
+        const time = selectedTime || requestData.time;
+        setShowDatetimePicker({ ...showDatetimePicker, time: !showDatetimePicker.time });
+        setRequestData({ ...requestData, time: time });
+    };
+
+    const handleServices = (name, value) => {
+        setServices({
+            ...services,
+            [name]: value,
+        })
     }
 
     return (
-        <View style={styles.mainViewStyle}>
-            <View style={styles.myViewStyle}>
-                <View style={styles.coverViewStyle}>
-                    <View style={styles.viewStyle1} />
-                    <View style={styles.viewStyle2} />
-                    <View style={styles.viewStyle3} />
-                </View>
-                <View style={styles.iconsViewStyle}>
-                    <TouchableOpacity onPress={() => tapAddress('pickup')} style={styles.contentStyle}>
-                        <View style={styles.textIconStyle}>
-                            <Text numberOfLines={1} style={[styles.textStyle, selectedPoint == 'pickup' ? { fontSize: 20 } : { fontSize: 14 }]}>{requestData.pickup_text}</Text>
-                            <Icon.MaterialIcons
-                                name='gps-fixed'
-                                color={colors.WHITE}
-                                containerStyle={{ flex: 1 }}
-                                style={selectedPoint == 'pickup' ? { fontSize: 24 } : { fontSize: 16 }}
-                            />
-                        </View>
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={() => tapAddress('deliver')} style={styles.contentStyle}>
-                        <View style={styles.textIconStyle}>
-                            <Text numberOfLines={1} style={[styles.textStyle, selectedPoint == 'deliver' ? { fontSize: 20 } : { fontSize: 14 }]}>{requestData.deliver_text}</Text>
-                            <Icon.MaterialIcons
-                                name='location-searching'
-                                color={colors.WHITE}
-                                containerStyle={{ flex: 1 }}
-                                style={selectedPoint == 'deliver' ? { fontSize: 24 } : { fontSize: 16 }}
-                            />
-                        </View>
-                    </TouchableOpacity>
-                </View>
-            </View>
-            <View style={styles.mapcontainer}>
-                <MapComponent
-                    mapRegion={selectedPoint == 'pickup' ? pickupRegion : deliverRegion}
-                    onRegionChangeComplete={onRegionChangeComplete}
-                />
-                {
-                    selectedPoint == 'pickup' ?
-                        <View pointerEvents="none" style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, alignItems: 'center', justifyContent: 'center', backgroundColor: 'transparent' }}>
-                            <Image pointerEvents="none" style={{ marginBottom: 40, height: 40, resizeMode: "contain" }} source={require('../../assets/images/red_pin.png')} />
-                        </View>
-                        :
-                        <View pointerEvents="none" style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, alignItems: 'center', justifyContent: 'center', backgroundColor: 'transparent' }}>
-                            <Image pointerEvents="none" style={{ marginBottom: 40, height: 40, resizeMode: "contain" }} source={require('../../assets/images/green_pin.png')} />
-                        </View>
-                }
-            </View>
-            <MButton opaque={true} buttonStyle="solid" caption={I18n.t('sign_up')} onPress={() => props.navigation.navigate('RequesterSelectRoutesScreen')} />
+        <View style={{ flex: 1, backgroundColor: colors.WHITE.background }}>
+            <ScrollView>
+                <Text style={styles.top_title}>{I18n.t('make_your_request')}</Text>
+                <Surface style={styles.surface}>
+                    <Text style={styles.title}>{I18n.t('select_addresses')}</Text>
 
+                    <Text style={styles.sub_title}>{I18n.t('pickup_address')}</Text>
+                    <TouchableOpacity style={styles.action} onPress={() => {
+                        route.params?.deliverPoint && route.params?.pickupPoint ?
+                            navigation.navigate('RequesterSelectRoutesScreen', {
+                                from: 'pickup',
+                                pickupData: {
+                                    latitude: requestData.pickup_latitude,
+                                    longitude: requestData.pickup_longitude,
+                                    text: requestData.pickup_text
+                                },
+                                deliverData: {
+                                    latitude: requestData.deliver_latitude,
+                                    longitude: requestData.deliver_longitude,
+                                    text: requestData.deliver_text
+                                }
+                            })
+                            :
+                            navigation.navigate('RequesterSelectRoutesScreen')
+                    }}>
+                        <Text numberOfLines={I18n.locale == 'ar' ? null : 1} style={styles.inputText}>{requestData.pickup_text == '' ? I18n.t('you_have_not_selected_any_address') : requestData.pickup_text}</Text>
+                        <Icon.MaterialIcons style={{ marginLeft: 8 }} name="location-searching" color={colors.PRIMARY_COLOR} size={20} />
+                    </TouchableOpacity>
+
+                    <Text style={styles.sub_title}>{I18n.t('delivery_address')}</Text>
+                    <TouchableOpacity style={styles.action} onPress={() => {
+                        route.params?.deliverPoint && route.params?.pickupPoint ?
+                            navigation.navigate('RequesterSelectRoutesScreen', {
+                                from: 'deliver',
+                                pickupData: {
+                                    latitude: requestData.pickup_latitude,
+                                    longitude: requestData.pickup_longitude,
+                                    text: requestData.pickup_text
+                                },
+                                deliverData: {
+                                    latitude: requestData.deliver_latitude,
+                                    longitude: requestData.deliver_longitude,
+                                    text: requestData.deliver_text
+                                }
+                            })
+                            :
+                            navigation.navigate('RequesterSelectRoutesScreen')
+                    }}>
+                        <Text numberOfLines={I18n.locale == 'ar' ? null : 1} style={styles.inputText}>{requestData.deliver_text == '' ? I18n.t('you_have_not_selected_any_address') : requestData.deliver_text}</Text>
+                        <Icon.MaterialIcons style={{ marginLeft: 8 }} name="gps-fixed" color={colors.PRIMARY_COLOR} size={20} />
+                    </TouchableOpacity>
+                    {
+                        (requestData.pickup_text == '' || requestData.deliver_text == '') && checkOnMakeRequest ?
+                            <Text style={styles.textValidation}>{I18n.t('you_must_select_both_addresses')}*</Text> : null
+                    }
+                </Surface>
+
+                <Surface style={styles.surface}>
+                    <Text style={styles.title}>{I18n.t("select_date_and_time")}</Text>
+                    <TouchableOpacity style={styles.action} onPress={onChangeDate}>
+                        <Text style={styles.inputText}>{Moment(requestData.date).format("LL")}</Text>
+                        <Icon.MaterialCommunityIcons style={{ marginLeft: 8 }} name="calendar-month" color={colors.PRIMARY_COLOR} size={20} />
+                    </TouchableOpacity>
+                    {
+                        showDatetimePicker.date ?
+                            <DateTimePicker
+                                testID="dateTimePicker"
+                                value={requestData.date}
+                                minimumDate={new Date()}
+                                mode="date"
+                                is24Hour={true}
+                                display="calendar"
+                                onChange={onChangeDate}
+                                locale={I18n.locale}
+                            /> : null
+                    }
+
+                    <TouchableOpacity style={styles.action} onPress={onChangeTime}>
+                        <Text style={styles.inputText}>{Moment(requestData.time).format("LT")}</Text>
+                        <Icon.MaterialCommunityIcons style={{ marginLeft: 8 }} name="clock" color={colors.PRIMARY_COLOR} size={20} />
+                    </TouchableOpacity>
+                    {
+                        showDatetimePicker.time ?
+                            <DateTimePicker
+                                testID="dateTimePicker"
+                                value={requestData.time}
+                                minimumDate={new Date()}
+                                mode="time"
+                                is24Hour={true}
+                                display="spinner"
+                                onChange={onChangeTime}
+                                locale={I18n.locale}
+                            /> : null
+                    }
+                </Surface>
+
+                <Surface style={styles.surface}>
+                    <Text style={styles.title}>{I18n.t('select_service_type')}</Text>
+                    <ServiceTypes services={services} onPress={(name, value) => handleServices(name, value)} />
+                    {
+                        !(services.car || services.bus || services.pickup || services.truck) && checkOnMakeRequest ?
+                            <Text style={styles.textValidation}>{I18n.t('you_must_select_at_least_one_service')}*</Text> : null
+                    }
+                </Surface>
+
+                <Surface style={styles.surface}>
+                    <Text style={styles.title}>{I18n.t('notes')} <Text style={styles.optionalText}>({I18n.t('optional')})</Text></Text>
+                    <TouchableOpacity style={styles.action}>
+                        <TextInput multiline numberOfLines={8} style={[styles.inputText, { textAlignVertical: 'top' }, I18n.locale == 'ar' ? { writingDirection: 'rtl' } : { writingDirection: 'ltr' }]} onChangeText={(value) => setRequestData({ ...requestData, notes: value.toString() })} />
+                    </TouchableOpacity>
+                </Surface>
+
+                <View style={{ padding: 20 }}>
+                    <MButton opaque={true} buttonStyle="solid" caption={I18n.t('send_request')} onPress={() => {
+                        (services.car || services.bus || services.pickup || services.truck) && (requestData.pickup_text != '' && requestData.deliver_text != '') ?
+                            handleMakeRequest()
+                            :
+                            setCheckOnMakeRequest(true)
+                    }} />
+                </View>
+            </ScrollView>
+            {
+                <MyModal
+                    isVisible={myModalVisibility.preparingRequestModal}
+                    onRequestClose={() => setMyModalVisibility({ ...myModalVisibility, preparingRequestModal: false })}
+                >
+                    <Text style={styles.unavailable}>{I18n.t('please_wait_while_we_process_your_order')}</Text>
+                    <ActivityIndicator size={64} color={colors.PRIMARY_COLOR} style={{ margin: 18 }} />
+                </MyModal>
+            }
+            {
+                <MyModal
+                    isVisible={myModalVisibility.noProvidersModal}
+                    headerCaption={I18n.t('modal_error_message')}
+                    onRequestClose={() => setMyModalVisibility({ ...myModalVisibility, noProvidersModal: false })}
+                >
+                    <Text style={styles.unavailable}>{I18n.t('no_available_providers_found')}</Text>
+                    <Icon.FontAwesome5 name="user-clock" color={colors.TRANSPARENCY.BLACK.medium} size={64}
+                        style={{ margin: 18 }}
+                    />
+                    <Text style={styles.unavailable}>{I18n.t('please_try_again_later')}</Text>
+                </MyModal>
+            }
+            {
+                <MyModal
+                    isVisible={myModalVisibility.requestSendedModal}
+                    headerCaption={I18n.t('modal_successful_message')}
+                    onRequestClose={() => setMyModalVisibility({ ...myModalVisibility, requestSendedModal: false })}
+                >
+                    <Text style={styles.unavailable}>{I18n.t('your_request_has_been_sent_successfully')}</Text>
+                    <Icon.MaterialIcons name="check" color={colors.TRANSPARENCY.BLACK.medium} size={64}
+                        style={{ margin: 18 }}
+                    />
+                </MyModal>
+            }
         </View>
     );
 }
 
 const styles = StyleSheet.create({
-    headerStyle: {
-        backgroundColor: colors.GREY.default,
-        borderBottomWidth: 0
+    unavailable: {
+        color: colors.TRANSPARENCY.BLACK.medium,
+        fontWeight: 'bold',
+        fontSize: 16,
+        textAlign: 'center',
     },
-    headerTitleStyle: {
-        color: colors.WHITE,
-        fontSize: 18
+    surface: {
+        width: '100%',
+        alignSelf: 'center',
+        marginVertical: 6,
+        padding: 12,
+        elevation: 1,
+        borderRadius: 0,
+        overflow: "visible",
+        backgroundColor: colors.WHITE.default
     },
-    mapcontainer: {
-        flex: 1,
-        width: width,
-        justifyContent: 'center',
-        alignItems: 'center',
+    title: {
+        marginLeft: 4,
+        fontWeight: 'bold',
+        fontSize: 18,
     },
-    map: {
-        flex: 1,
-        ...StyleSheet.absoluteFillObject,
+    top_title: {
+        margin: 20,
+        fontWeight: 'bold',
+        fontSize: 24,
     },
-    inrContStyle: {
-        marginLeft: 10,
-        marginRight: 10
+    sub_title: {
+        marginLeft: 8,
+        color: colors.TRANSPARENCY.BLACK.medium
     },
-    mainViewStyle: {
-        flex: 1,
-        backgroundColor: colors.WHITE,
-    },
-    myViewStyle: {
-        flexDirection: 'row',
-        borderTopWidth: 0,
-        alignItems: 'center',
-        backgroundColor: colors.PRIMARY_COLOR,
-        paddingEnd: 20,
-        height: 110,
-    },
-    coverViewStyle: {
-        flex: 1.5,
-        alignItems: 'center'
-    },
-    viewStyle1: {
-        height: 12,
-        width: 12,
-        borderRadius: 15 / 2,
-        backgroundColor: colors.YELLOW.light
-    },
-    viewStyle2: {
-        height: height / 25,
-        width: 1,
-        backgroundColor: colors.YELLOW.light
-    },
-    viewStyle3: {
-        height: 14,
-        width: 14,
-        backgroundColor: colors.GREY.iconPrimary
-    },
-    iconsViewStyle: {
-        flex: 9.5,
-        justifyContent: 'space-between'
-    },
-    contentStyle: {
-        //flex: 1, 
-        justifyContent: 'center',
-        borderBottomColor: colors.WHITE,
-        borderBottomWidth: 1
-    },
-    textIconStyle: {
-        // flex: 1, 
-        justifyContent: 'center',
-        alignItems: 'center',
-        flexDirection: 'row'
-    },
-    textStyle: {
+    inputText: {
         flex: 9,
-        fontSize: 14,
-        fontWeight: '400',
-        color: colors.WHITE,
-        marginTop: 10,
-        marginBottom: 10
     },
-    searchClickStyle: {
-        //flex: 1, 
-        justifyContent: 'center'
-    },
-    compViewStyle: {
-        flex: 1,
-    },
-    pickCabStyle: {
-        flex: 0.3,
-        fontSize: 15,
-        fontWeight: '500',
-        color: colors.BLACK
-    },
-    sampleTextStyle: {
-        flex: 0.2,
-        fontSize: 13,
-        fontWeight: '300',
-        color: colors.GREY.secondary
-    },
-    adjustViewStyle: {
-        flex: 9,
+    action: {
         flexDirection: 'row',
-        //justifyContent: 'space-around',
-        marginTop: 8
+        borderWidth: 1,
+        borderColor: colors.TRANSPARENCY.BLACK.small,
+        padding: 14,
+        borderRadius: 8,
+        marginVertical: 6,
     },
-    cabDivStyle: {
-        flex: 1,
-        width: width / 3,
-        alignItems: 'center'
+    textValidation: {
+        color: 'red'
     },
-    imageViewStyle: {
-        flex: 2.7,
-        flexDirection: 'row',
-        justifyContent: 'space-around',
-    },
-    imageStyle: {
-        height: height / 14,
-        width: height / 14,
-        borderRadius: height / 14 / 2,
-        borderWidth: 3,
-        borderColor: colors.YELLOW.secondary,
-        //backgroundColor: colors.WHITE, 
-        justifyContent: 'center',
-        alignItems: 'center'
-    },
-    textViewStyle: {
-        flex: 1,
-        alignItems: 'center',
-        flexDirection: 'column',
-        justifyContent: 'center',
-    },
-    text1: {
-
-        fontSize: 14,
-        fontWeight: '900',
-        color: colors.BLACK
-    },
-    text2: {
-        fontSize: 12,
-        fontWeight: '900',
-        color: colors.GREY.secondary
-    },
-    imagePosition: {
-        height: height / 14,
-        width: height / 14,
-        borderRadius: height / 14 / 2,
-        borderWidth: 3,
-        borderColor: colors.YELLOW.secondary,
-        //backgroundColor: colors.YELLOW.secondary, 
-        justifyContent: 'center',
-        alignItems: 'center'
-    },
-    imageStyleView: {
-        height: height / 14,
-        width: height / 14,
-        borderRadius: height / 14 / 2,
-        borderWidth: 3,
-        borderColor: colors.YELLOW.secondary,
-        //backgroundColor: colors.WHITE, 
-        justifyContent: 'center',
-        alignItems: 'center'
-    },
-    imageStyle1: {
-        height: height / 20.5,
-        width: height / 20.5
-    },
-    imageStyle2: {
-        height: height / 20.5,
-        width: height / 20.5
-    },
-    buttonContainer: {
-        flex: 1
-    },
-
-    buttonTitleText: {
-        color: colors.GREY.default,
-        fontSize: 20,
-        alignSelf: 'flex-end'
-    },
-
-    cancelButtonStyle: {
-        backgroundColor: "#edede8",
-        elevation: 0,
-        width: "60%",
-        borderRadius: 5,
-        alignSelf: "center"
+    optionalText: {
+        color: colors.TRANSPARENCY.BLACK.small,
+        fontWeight: 'normal',
+        fontSize: 14
     }
-
 });

@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
-import { Platform, StatusBar } from 'react-native';
 import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
 import { colors } from '../common/theme';
 import { google_map_key } from '../common/key';
 
-export default function SearchPlace(props) {
+import I18n from '../common/lang/config';
 
-    const { from, pickupData, deliverData } = props.route.params;
+export default function SearchPlace({navigation, route}) {
+
+    const { from, pickupData, deliverData } = route.params;
 
     const goMap = (data, details) => {
         if (from == "pickup") {
@@ -16,7 +17,7 @@ export default function SearchPlace(props) {
                 text: details.formatted_address
             }
 
-            props.navigation.replace('RequesterSelectRoutesScreen', { from: from, pickupData: newData, deliverData: deliverData });
+            navigation.navigate('RequesterSelectRoutesScreen', { from: from, pickupData: newData, deliverData: deliverData });
         } else {
             const newData = {
                 latitude: details.geometry.location.lat,
@@ -24,13 +25,13 @@ export default function SearchPlace(props) {
                 text: details.formatted_address
             }
 
-            props.navigation.replace('RequesterSelectRoutesScreen', { from: from, pickupData: pickupData, deliverData: newData });
+            navigation.navigate('RequesterSelectRoutesScreen', { from: from, pickupData: pickupData, deliverData: newData });
         }
 
     }
     return (
         <GooglePlacesAutocomplete
-            placeholder='Search'
+            placeholder={I18n.t('search')}
             minLength={2}
             autoFocus={true}
             returnKeyType={'search'}
@@ -44,11 +45,11 @@ export default function SearchPlace(props) {
             getDefaultValue={() => ''}
             query={{
                 key: google_map_key,
-                language: 'es',
+                language: I18n.locale,
             }}
             styles={{
                 container: {
-                    backgroundColor: colors.BACKGROUND_COLOR
+                    backgroundColor: colors.WHITE.background
                 },
                 description: {
                     fontWeight: 'bold'
@@ -56,7 +57,7 @@ export default function SearchPlace(props) {
                 textInputContainer: {
                     width: '100%',
                     height: 65,
-                    backgroundColor: colors.BACKGROUND_COLOR
+                    backgroundColor: colors.WHITE.background
                 },
                 textInput: {
                     height: 50,
@@ -66,29 +67,25 @@ export default function SearchPlace(props) {
                 loader: {
                     borderColor: colors.PRIMARY_COLOR
                 },
-                listView: {
-                },
-                predefinedPlacesDescription: {
-                },
                 poweredContainer: {
                     borderBottomWidth: 1,
                     borderColor: colors.TRANSPARENCY.BLACK.small
                 },
                 separator: {
                     height: 2,
-                    backgroundColor: colors.BACKGROUND_COLOR
+                    backgroundColor: colors.WHITE.background
                 },
                 row: {
-                    backgroundColor: colors.WHITE
+                    backgroundColor: colors.WHITE.default
                 }
             }}
             renderDescription={(row) => row.description || row.formatted_address || row.name}
             currentLocation={true}
-            currentLocationLabel="Current location"
+            currentLocationLabel={I18n.t('current_location')}
             nearbyPlacesAPI='GoogleReverseGeocoding'
             GoogleReverseGeocodingQuery={{
                 key: google_map_key,
-                language: 'en',
+                language: I18n.location,
             }}
             GooglePlacesSearchQuery={{
                 rankby: 'distance',

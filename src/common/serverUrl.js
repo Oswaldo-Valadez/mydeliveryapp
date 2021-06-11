@@ -1,0 +1,1 @@
+export const cloud_function_server_url = 'http://localhost:5001/the-champions-factory-ags/us-central1/';

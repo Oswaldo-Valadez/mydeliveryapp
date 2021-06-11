@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "MyDeliveryApp",
+    "name": "Oman Logistic",
     "description": "Delivery Request App",
-    "slug": "mydeliveryapp",
+    "slug": "omanlogistic",
     "privacy": "public",
     "platforms": [
       "ios",
@@ -27,7 +27,7 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.mygodapp.mydeliveryapp",
+      "bundleIdentifier": "com.mygodapp.omanlogistic",
       "infoPlist": {
         "NSLocationAlwaysUsageDescription": "This app uses the location to find the Cabs near you.",
         "NSLocationWhenInUseUsageDescription": "This app uses the location to find the Cabs near you.",
@@ -43,7 +43,7 @@
       }
     },
     "android": {
-      "package": "com.mygodapp.mydeliveryapp",
+      "package": "com.mygodapp.omanlogistic",
       "permissions": [
         "CAMERA",
         "READ_EXTERNAL_STORAGE",

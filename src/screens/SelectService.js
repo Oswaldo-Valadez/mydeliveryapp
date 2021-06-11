@@ -26,8 +26,8 @@ export default function SelectLanguage(props) {
           <Avatar.Icon backgroundColor={colors.PRIMARY_COLOR} size={94} icon="account-supervisor" />
         </Animatable.View>
         <Animatable.View animation="fadeInUpBig" style={styles.footer}>
-          <MButton opaque={true} buttonStyle="outlined" caption={I18n.t('requester')} onPress={() => props.navigation.navigate('LoginScreen', { usertype: 'requester' })} />
-          <MButton opaque={true} buttonStyle="outlined" caption={I18n.t('provider')} onPress={() => props.navigation.navigate('LoginScreen', { usertype: 'provider' })} />
+          <MButton opaque={true} buttonStyle="outlined" caption={I18n.t('requester')} onPress={() => props.navigation.navigate('IntroSliderScreen', { usertype: 'requester' })} />
+          <MButton opaque={true} buttonStyle="outlined" caption={I18n.t('provider')} onPress={() => props.navigation.navigate('IntroSliderScreen', { usertype: 'provider' })} />
         </Animatable.View>
       </MBackground>
     </View>

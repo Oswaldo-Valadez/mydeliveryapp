@@ -1,8 +1,8 @@
 import I18n from './lang/config';
 
-export function RequestPushMsg(token, msg) {
+export default function RequestPushMsg(token, msg) {
 
-    console.log('param=>', token, msg,)
+    console.log('param =>', token, msg,)
 
     fetch('https://exp.host/--/api/v2/push/send', {
         method: 'POST',
@@ -29,6 +29,3 @@ export function RequestPushMsg(token, msg) {
         console.log(error)
     });
 }
-
-
-

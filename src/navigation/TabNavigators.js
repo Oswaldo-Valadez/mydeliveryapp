@@ -4,11 +4,12 @@ import { createMaterialBottomTabNavigator } from '@react-navigation/material-bot
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
 
 import RequesterActiveRequests from '../screens/RequesterActiveRequests';
-import RequesterCompleteRequests from '../screens/RequesterCompleteRequests';
+import RequesterInactiveRequests from '../screens/RequesterInactiveRequests';
 import RequesterMakeRequest from '../screens/RequesterMakeRequest';
 
 import ProviderActiveRequests from '../screens/ProviderActiveRequests';
-import ProviderCompleteRequests from '../screens/ProviderCompleteRequests';
+import ProviderInactiveRequests from '../screens/ProviderInactiveRequests';
+import ProviderPendingRequests from '../screens/ProviderPendingRequests';
 
 import * as Icon from '@expo/vector-icons';
 import { colors } from '../common/theme';
@@ -18,10 +19,10 @@ import I18n from '../common/lang/config';
 const RootProviderTab = createMaterialTopTabNavigator();
 export const ProviderTab = () => (
     <RootProviderTab.Navigator
-        initialRouteName="ProviderMakeRequestScreen"
+        initialRouteName="ProviderPendingRequestsScreen"
         tabBarPosition="bottom"
         tabBarOptions={{
-            labelStyle: { fontSize: 8, color: colors.WHITE },
+            labelStyle: { fontSize: 8, color: colors.WHITE.default },
             style: { backgroundColor: colors.PRIMARY_COLOR },
             showIcon: true,
             indicatorStyle: {
@@ -35,17 +36,27 @@ export const ProviderTab = () => (
             options={{
                 tabBarLabel: I18n.t('active_requests'),
                 tabBarIcon: () => (
-                    <Icon.MaterialIcons name="playlist-play" color={colors.WHITE} size={26} />
+                    <Icon.MaterialIcons name="playlist-play" color={colors.WHITE.default} size={26} />
                 )
             }}
         />
         <RootProviderTab.Screen
-            name="ProviderCompleteRequestsScreen"
-            component={ProviderCompleteRequests}
+            name="ProviderPendingRequestsScreen"
+            component={ProviderPendingRequests}
             options={{
-                tabBarLabel: I18n.t('completed_requests'),
+                tabBarLabel: I18n.t('pending_requests'),
                 tabBarIcon: () => (
-                    <Icon.MaterialIcons name="playlist-add-check" color={colors.WHITE} size={26} />
+                    <Icon.MaterialIcons name="playlist-play" color={colors.WHITE.default} size={26} />
+                )
+            }}
+        />
+        <RootProviderTab.Screen
+            name="ProviderInactiveRequestsScreen"
+            component={ProviderInactiveRequests}
+            options={{
+                tabBarLabel: I18n.t('inactive_requests'),
+                tabBarIcon: () => (
+                    <Icon.MaterialIcons name="playlist-add-check" color={colors.WHITE.default} size={26} />
                 )
             }}
         />
@@ -57,9 +68,8 @@ export const RequesterTab = () => (
     <RootRequesterTab.Navigator
         initialRouteName="RequesterMakeRequestScreen"
         tabBarPosition="bottom"
-        swipeEnabled={false}
         tabBarOptions={{
-            labelStyle: { fontSize: 8, color: colors.WHITE },
+            labelStyle: { fontSize: 8, color: colors.WHITE.default },
             style: { backgroundColor: colors.PRIMARY_COLOR },
             showIcon: true,
             indicatorStyle: {
@@ -73,7 +83,7 @@ export const RequesterTab = () => (
             options={{
                 tabBarLabel: I18n.t('active_requests'),
                 tabBarIcon: () => (
-                    <Icon.MaterialIcons name="playlist-play" color={colors.WHITE} size={26} />
+                    <Icon.MaterialIcons name="playlist-play" color={colors.WHITE.default} size={26} />
                 )
             }}
         />
@@ -83,17 +93,17 @@ export const RequesterTab = () => (
             options={{
                 tabBarLabel: I18n.t('make_request'),
                 tabBarIcon: () => (
-                    <Icon.Octicons name="diff-added" color={colors.WHITE} size={26} />
+                    <Icon.Octicons name="diff-added" color={colors.WHITE.default} size={26} />
                 )
             }}
         />
         <RootRequesterTab.Screen
-            name="RequesterCompleteRequestsScreen"
-            component={RequesterCompleteRequests}
+            name="RequesterInactiveRequestsScreen"
+            component={RequesterInactiveRequests}
             options={{
-                tabBarLabel: I18n.t('completed_requests'),
+                tabBarLabel: I18n.t('inactive_requests'),
                 tabBarIcon: () => (
-                    <Icon.MaterialIcons name="playlist-add-check" color={colors.WHITE} size={26} />
+                    <Icon.MaterialIcons name="playlist-add-check" color={colors.WHITE.default} size={26} />
                 )
             }}
         />

@@ -20,12 +20,14 @@ export const colors = {
     }
   },
   PRIMARY_COLOR: '#ff1632',
-  WHITE: '#fff',
+  WHITE: {
+    default: "#fff",
+    background: "#f4f4fb",
+  },
   BLACK: '#000',
   RED: 'red',
   SKY: '#1E81D3',
   DARK: "#070807",
-  BACKGROUND_COLOR: "#f4f4fb",
 
   GREY: {
     default: '#243235',

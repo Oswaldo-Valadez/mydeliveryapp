@@ -16,7 +16,7 @@ function MaterialButton(props) {
 
   return (
     <TouchableOpacity
-      style={[buttonStyle, styles.button, props.opaque ? {} : { backgroundColor: 'transarent' }]}
+      style={[props.style ? props.style : null, buttonStyle, styles.button, props.opaque ? {} : { backgroundColor: 'transarent' }]}
       onPress={() => { props.onPress() }}
     >
       <Text style={[captionStyle, styles.caption]}>{props.caption}</Text>
@@ -30,7 +30,7 @@ const styles = StyleSheet.create({
   },
   outlined: {
     borderColor: colors.PRIMARY_COLOR,
-    backgroundColor: colors.WHITE,
+    backgroundColor: colors.WHITE.default,
     borderWidth: 3,
   },
   button: {
@@ -44,11 +44,10 @@ const styles = StyleSheet.create({
   },
   caption: {
     fontSize: 14,
-    fontWeight: 'bold',
-    //fontFamily: "Roboto-Regular"
+    fontFamily: 'OpenSans-Bold',
   },
   captionSolid: {
-    color: colors.WHITE,
+    color: colors.WHITE.default,
   },
   captionOutlined: {
     color: colors.PRIMARY_COLOR,

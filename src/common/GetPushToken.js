@@ -33,7 +33,7 @@ export default async function registerForPushNotificationsAsync() {
   }
 
   Notifications.addListener(() => {
-    console.log("Listener");
+    //console.log("Listener");
   });
 
   // Get the token that uniquely identifies this device

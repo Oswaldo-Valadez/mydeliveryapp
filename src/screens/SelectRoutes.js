@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useLayoutEffect } from 'react';
 import {
     StyleSheet,
     View,
@@ -22,27 +22,46 @@ import BottomButton from '../components/BottomButton';
 
 import * as Icon from '@expo/vector-icons';
 
-export default function SelectRoutes(props) {
+export default function SelectRoutes({ navigation, route }) {
 
-    useEffect(() => {
-        Geocoder.init(google_map_key);
+    useLayoutEffect(() => {
+        Geocoder.init(google_map_key, { language: I18n.locale });
         _getLocationAsync();
     }, []);
+
+    useLayoutEffect(() => {
+        if (route.params?.pickupData && route.params?.deliverData && route.params?.from) {
+            const { pickupData, deliverData, from } = route.params;
+            setPickupRegion({
+                ...pickupRegion,
+                latitude: pickupData.latitude,
+                longitude: pickupData.longitude,
+                text: pickupData.text,
+            });
+            setDeliverRegion({
+                ...pickupRegion,
+                latitude: deliverData.latitude,
+                longitude: deliverData.longitude,
+                text: deliverData.text,
+            });
+            setSelectedPoint(from);
+        }
+    }, [route.params?.pickupData, route.params?.deliverData, route.params?.from]);
 
     const [pickupRegion, setPickupRegion] = useState({
         text: "",
         latitude: 9.061460,
         longitude: 7.500640,
-        latitudeDelta: 0.9922,
-        longitudeDelta: 0.9421,
+        latitudeDelta: 0.0628,
+        longitudeDelta: 0.0447,
     });
 
     const [deliverRegion, setDeliverRegion] = useState({
         text: "",
         latitude: 9.061460,
         longitude: 7.500640,
-        latitudeDelta: 0.9922,
-        longitudeDelta: 0.9421,
+        latitudeDelta: 0.0628,
+        longitudeDelta: 0.0447,
     });
 
     const [selectedPoint, setSelectedPoint] = useState('pickup');
@@ -67,22 +86,7 @@ export default function SelectRoutes(props) {
                     .then((response) => response.json())
                     .then((responseJson) => {
                         //console.error(responseJson);
-                        if (props.route.params) {
-                            const { pickupData, deliverData, from } = props.route.params;
-                            setPickupRegion({
-                                ...pickupRegion,
-                                latitude: pickupData.latitude,
-                                longitude: pickupData.longitude,
-                                text: pickupData.text,
-                            });
-                            setDeliverRegion({
-                                ...pickupRegion,
-                                latitude: deliverData.latitude,
-                                longitude: deliverData.longitude,
-                                text: deliverData.text,
-                            });
-                            setSelectedPoint(from);
-                        } else
+                        if (!route.params)
                             Geocoder.from({
                                 latitude: pos.latitude,
                                 longitude: pos.longitude
@@ -115,7 +119,7 @@ export default function SelectRoutes(props) {
 
     const tapAddress = (selection) => {
         if (selection === selectedPoint) {
-            props.navigation.navigate('RequesterSearchPlaceScreen', { from: selection, pickupData: pickupRegion, deliverData: deliverRegion });
+            navigation.navigate('RequesterSearchPlaceScreen', { from: selection, pickupData: pickupRegion, deliverData: deliverRegion });
         } else {
             setSelectedPoint(selection);
         }
@@ -160,10 +164,10 @@ export default function SelectRoutes(props) {
                 <View style={styles.iconsViewStyle}>
                     <TouchableOpacity onPress={() => tapAddress('pickup')} style={styles.contentStyle}>
                         <View style={styles.textIconStyle}>
-                            <Text numberOfLines={1} style={[styles.textStyle, selectedPoint == 'pickup' ? { fontSize: 20 } : { fontSize: 14 }]}>{pickupRegion.text}</Text>
+                            <Text numberOfLines={1} style={[styles.textStyle, selectedPoint == 'pickup' ? { fontSize: 20 } : { fontSize: 14 }, I18n.locale == 'ar' ? { marginRight: 8 } : null]}>{pickupRegion.text}</Text>
                             <Icon.MaterialIcons
-                                name='gps-fixed'
-                                color={colors.WHITE}
+                                name='location-searching'
+                                color={colors.WHITE.default}
                                 containerStyle={{ flex: 1 }}
                                 style={selectedPoint == 'pickup' ? { fontSize: 24 } : { fontSize: 16 }}
                             />
@@ -171,10 +175,10 @@ export default function SelectRoutes(props) {
                     </TouchableOpacity>
                     <TouchableOpacity onPress={() => tapAddress('deliver')} style={styles.contentStyle}>
                         <View style={styles.textIconStyle}>
-                            <Text numberOfLines={1} style={[styles.textStyle, selectedPoint == 'deliver' ? { fontSize: 20 } : { fontSize: 14 }]}>{deliverRegion.text}</Text>
+                            <Text numberOfLines={1} style={[styles.textStyle, selectedPoint == 'deliver' ? { fontSize: 20 } : { fontSize: 14 }, I18n.locale == 'ar' ? { marginRight: 8 } : null]}>{deliverRegion.text}</Text>
                             <Icon.MaterialIcons
-                                name='location-searching'
-                                color={colors.WHITE}
+                                name='gps-fixed'
+                                color={colors.WHITE.default}
                                 containerStyle={{ flex: 1 }}
                                 style={selectedPoint == 'deliver' ? { fontSize: 24 } : { fontSize: 16 }}
                             />
@@ -199,8 +203,15 @@ export default function SelectRoutes(props) {
                 }
             </View>
             <View style={styles.bottomButtonContainer}>
-                <BottomButton style={styles.bottomBigButton} caption={I18n.t('confirm_addresses')} onPress={() => props.navigation.navigate('RequesterMakeRequestScreen', { deliverPoint: deliverRegion, pickupPoint: pickupRegion })} />
-                <BottomButton captionStyle={{ color: colors.PRIMARY_COLOR }} style={styles.bottomSmallButton} caption={I18n.t('cancel')} onPress={() => props.navigation.goBack()} />
+                <BottomButton style={styles.bottomBigButton} caption={I18n.t('confirm_addresses')} onPress={() => {
+                    navigation.navigate('RootTabScreen', {
+                        screen: 'RequesterMakeRequestScreen',
+                        params: {
+                            deliverPoint: deliverRegion,
+                            pickupPoint: pickupRegion
+                        }
+                    });
+                }} />
             </View>
         </View>
     );
@@ -214,7 +225,7 @@ const styles = StyleSheet.create({
     },
     bottomSmallButton: {
         flex: 1.25,
-        backgroundColor: colors.WHITE,
+        backgroundColor: colors.WHITE.default,
         borderTopWidth: 1,
         borderColor: colors.PRIMARY_COLOR,
         flexDirection: 'row',
@@ -232,7 +243,7 @@ const styles = StyleSheet.create({
     },
     mainViewStyle: {
         flex: 1,
-        backgroundColor: colors.WHITE,
+        backgroundColor: colors.WHITE.default,
     },
     myViewStyle: {
         flexDirection: 'row',
@@ -269,7 +280,7 @@ const styles = StyleSheet.create({
     contentStyle: {
         //flex: 1, 
         justifyContent: 'center',
-        borderBottomColor: colors.WHITE,
+        borderBottomColor: colors.WHITE.default,
         borderBottomWidth: 1
     },
     textIconStyle: {
@@ -282,8 +293,9 @@ const styles = StyleSheet.create({
         flex: 9,
         fontSize: 14,
         fontWeight: '400',
-        color: colors.WHITE,
+        color: colors.WHITE.default,
         marginTop: 10,
-        marginBottom: 10
+        marginBottom: 10,
+        writingDirection: I18n.locale == 'ar' ? 'rtl' : 'ltr',
     },
 });
